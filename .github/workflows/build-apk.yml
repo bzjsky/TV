@@ -61,6 +61,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Configure Gradle Daemon JVM
+        run: echo "toolchainVersion=21" > gradle/gradle-daemon-jvm.properties
+
       - name: Prepare Keystore and local.properties
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
