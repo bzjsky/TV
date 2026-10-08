@@ -1,0 +1,119 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - fongmi
+      - main
+      - master
+    paths-ignore:
+      - 'website/**'
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    branches:
+      - fongmi
+      - main
+      - master
+    paths-ignore:
+      - 'website/**'
+      - 'docs/**'
+      - '**.md'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '构建目标类型 (Build Target)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'leanback'
+          - 'mobile'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Prepare Keystore and local.properties
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Using custom keystore from GitHub Secrets..."
+            echo "$KEYSTORE_BASE64" | base64 -d > "$GITHUB_WORKSPACE/release.jks"
+            STORE_FILE="$GITHUB_WORKSPACE/release.jks"
+            ALIAS="${KEY_ALIAS:-fongmi}"
+            PASSWORD="${STORE_PASSWORD:-123456}"
+          else
+            echo "No custom keystore found in Secrets. Generating a self-signed build keystore..."
+            keytool -genkeypair -v \
+              -keystore "$GITHUB_WORKSPACE/release.jks" \
+              -alias "fongmi" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass "123456" \
+              -keypass "123456" \
+              -dname "CN=TV, OU=TV, O=TV, L=Unknown, ST=Unknown, C=CN"
+            STORE_FILE="$GITHUB_WORKSPACE/release.jks"
+            ALIAS="fongmi"
+            PASSWORD="123456"
+          fi
+
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "storeFile=$STORE_FILE" >> local.properties
+          echo "keyAlias=$ALIAS" >> local.properties
+          echo "storePassword=$PASSWORD" >> local.properties
+
+      - name: Build APK with Gradle
+        run: |
+          TARGET="${{ github.event.inputs.target || 'all' }}"
+          echo "Building target: $TARGET"
+          if [ "$TARGET" = "leanback" ]; then
+            ./gradlew :app:assembleLeanbackRelease --stacktrace
+          elif [ "$TARGET" = "mobile" ]; then
+            ./gradlew :app:assembleMobileRelease --stacktrace
+          else
+            ./gradlew assembleRelease --stacktrace
+          fi
+
+      - name: List Generated APKs
+        run: |
+          mkdir -p Release/apk
+          ls -lh Release/apk/
+
+      - name: Upload APK Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TV-Release-APKs
+          path: Release/apk/*.apk
+          if-no-files-found: error
