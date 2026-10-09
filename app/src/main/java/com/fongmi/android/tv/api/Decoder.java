@@ -32,7 +32,7 @@ public class Decoder {
     private static String verify(String url, String data, String key) throws Exception {
         if (data.isEmpty()) throw new Exception();
         if (Json.isObj(data)) return fix(url, data);
-        if (!key.isEmpty()) data = ecb(data, key);
+        if (!key.isEmpty()) data = base64(ecb(data, key));
         if (data.contains("**")) data = base64(data);
         if (data.startsWith("2423")) data = cbc(data.replaceAll("\\s+", ""));
         return fix(url, data);
@@ -65,9 +65,14 @@ public class Decoder {
     }
 
     private static String base64(String data) {
+        if (data.isEmpty() || data.startsWith("{") || data.startsWith("[")) return data;
         String extract = extract(data);
-        if (extract.isEmpty()) return data;
-        return new String(Base64.decode(extract, Base64.DEFAULT));
+        if (extract.isEmpty()) extract = data;
+        try {
+            return new String(Base64.decode(extract.trim().replace('_', '/').replace('-', '+'), Base64.DEFAULT), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return data;
+        }
     }
 
     private static String extract(String data) {
