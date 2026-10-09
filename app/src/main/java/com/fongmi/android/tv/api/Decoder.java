@@ -32,7 +32,7 @@ public class Decoder {
     private static String verify(String url, String data, String key) throws Exception {
         if (data.isEmpty()) throw new Exception();
         if (Json.isObj(data)) return fix(url, data);
-        if (!key.isEmpty()) data = base64(ecb(data, key));
+        if (!key.isEmpty()) data = ecb(data, key);
         if (data.contains("**")) data = base64(data);
         if (data.startsWith("2423")) data = cbc(data.replaceAll("\\s+", ""));
         return fix(url, data);
@@ -76,7 +76,16 @@ public class Decoder {
     }
 
     private static String ecb(String data, String key) {
-        return Crypto.aes("AES/ECB", false, data, true, key, null, false);
+        String decrypt = "";
+        try {
+            String outer = new String(Base64.decode(data.trim(), Base64.DEFAULT), StandardCharsets.UTF_8);
+            decrypt = Crypto.aes("AES/ECB", false, outer, true, key, null, false);
+        } catch (Exception ignored) {
+        }
+        if (decrypt.isEmpty()) {
+            decrypt = Crypto.aes("AES/ECB", false, data, true, key, null, false);
+        }
+        return decrypt;
     }
 
     private static String getKey(String url) {
