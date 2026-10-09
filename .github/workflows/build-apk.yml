@@ -112,6 +112,7 @@ jobs:
       - name: List Generated APKs
         run: |
           mkdir -p Release/apk
+          find app/build/outputs/apk -name "*.apk" -exec cp {} Release/apk/ \;
           ls -lh Release/apk/
 
       - name: Upload APK Artifacts
