@@ -53,23 +53,42 @@ if (-not $Target) {
 }
 
 # 4. 执行构建
-$gradleTask = switch ($Target) {
-    "all"      { "assembleRelease" }
-    "leanback" { ":app:assembleLeanbackRelease" }
-    "mobile"   { ":app:assembleMobileRelease" }
-    "clean"    { "clean" }
-}
-
-Write-Host ""
-Write-Host "[*] 开始执行构建: .\gradlew.bat $gradleTask" -ForegroundColor Green
 $startTime = Get-Date
 
-cmd.exe /c "gradlew.bat $gradleTask"
-
-if ($LASTEXITCODE -ne 0) {
+if ($Target -eq "all") {
     Write-Host ""
-    Write-Host "[x] 构建失败，退出码: $LASTEXITCODE" -ForegroundColor Red
-    exit $LASTEXITCODE
+    Write-Host "[*] [1/2] 开始构建电视版: .\gradlew.bat :app:assembleLeanbackRelease" -ForegroundColor Green
+    cmd.exe /c "gradlew.bat :app:assembleLeanbackRelease"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "[x] 电视版构建失败，退出码: $LASTEXITCODE" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+
+    Write-Host ""
+    Write-Host "[*] [2/2] 开始构建手机版: .\gradlew.bat :app:assembleMobileRelease" -ForegroundColor Green
+    cmd.exe /c "gradlew.bat :app:assembleMobileRelease"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "[x] 手机版构建失败，退出码: $LASTEXITCODE" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+} else {
+    $gradleTask = switch ($Target) {
+        "leanback" { ":app:assembleLeanbackRelease" }
+        "mobile"   { ":app:assembleMobileRelease" }
+        "clean"    { "clean" }
+    }
+
+    Write-Host ""
+    Write-Host "[*] 开始执行构建: .\gradlew.bat $gradleTask" -ForegroundColor Green
+    cmd.exe /c "gradlew.bat $gradleTask"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "[x] 构建失败，退出码: $LASTEXITCODE" -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
 }
 
 $duration = (Get-Date) - $startTime

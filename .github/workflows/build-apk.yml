@@ -98,6 +98,8 @@ jobs:
           echo "storePassword=$PASSWORD" >> local.properties
 
       - name: Build APK with Gradle
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4096m -XX:+UseG1GC"
         run: |
           TARGET="${{ github.event.inputs.target || 'all' }}"
           echo "Building target: $TARGET"
@@ -106,7 +108,10 @@ jobs:
           elif [ "$TARGET" = "mobile" ]; then
             ./gradlew :app:assembleMobileRelease --stacktrace
           else
-            ./gradlew assembleRelease --stacktrace
+            echo "Building Leanback Release APK..."
+            ./gradlew :app:assembleLeanbackRelease --stacktrace
+            echo "Building Mobile Release APK..."
+            ./gradlew :app:assembleMobileRelease --stacktrace
           fi
 
       - name: List Generated APKs
