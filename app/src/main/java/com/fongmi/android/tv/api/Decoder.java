@@ -39,6 +39,7 @@ public class Decoder {
     }
 
     private static String fix(String url, String data) {
+        url = getBase(url, data);
         Matcher matcher = JS_URI.matcher(data);
         while (matcher.find()) data = replace(url, data, matcher.group());
         if (data.contains("../")) data = data.replace("../", UrlUtil.resolve(url, "../"));
@@ -46,6 +47,11 @@ public class Decoder {
         if (data.contains("__JS1__")) data = data.replace("__JS1__", "./");
         if (data.contains("__JS2__")) data = data.replace("__JS2__", "../");
         return data;
+    }
+
+    private static String getBase(String url, String data) {
+        String origin = Json.safeString(Json.safeObject(Json.parse(data)), "origin");
+        return origin.isEmpty() ? url : origin;
     }
 
     private static String replace(String url, String data, String ext) {
