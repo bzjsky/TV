@@ -467,6 +467,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     @Override
     protected void onBackInvoked() {
         if (mBinding.progressLayout.isProgress()) {
+            VodConfig.get().cancel();
             showContent();
         } else if (mPresenter.isDelete()) {
             setHistoryDelete(false);

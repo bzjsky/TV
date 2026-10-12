@@ -150,7 +150,7 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
         return new Callback() {
             @Override
             public void start() {
-                Notify.progress(getActivity());
+                Notify.progress(getActivity(), dialog -> cancelConfig());
             }
 
             @Override
@@ -165,6 +165,12 @@ public class SettingActivity extends BaseActivity implements ConfigListener, Sit
                 Notify.show(msg);
             }
         };
+    }
+
+    private void cancelConfig() {
+        VodConfig.get().cancel();
+        LiveConfig.get().cancel();
+        WallConfig.get().cancel();
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.fongmi.android.tv.utils;
 import android.Manifest;
 import android.app.Notification;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -56,8 +57,12 @@ public class Notify {
     }
 
     public static void progress(Context context) {
+        progress(context, null);
+    }
+
+    public static void progress(Context context, DialogInterface.OnCancelListener listener) {
         dismiss();
-        get().create(context);
+        get().create(context, listener);
     }
 
     public static void dismiss() {
@@ -67,9 +72,10 @@ public class Notify {
         }
     }
 
-    private void create(Context context) {
+    private void create(Context context, DialogInterface.OnCancelListener listener) {
         ViewProgressBinding binding = ViewProgressBinding.inflate(LayoutInflater.from(context));
         mDialog = new MaterialAlertDialogBuilder(context).setView(binding.getRoot()).create();
+        if (listener != null) mDialog.setOnCancelListener(listener);
         mDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         mDialog.show();
     }

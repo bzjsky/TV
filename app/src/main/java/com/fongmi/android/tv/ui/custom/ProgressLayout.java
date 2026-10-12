@@ -53,6 +53,8 @@ public class ProgressLayout extends RelativeLayout {
         mProgressView = ViewProgressBinding.inflate(LayoutInflater.from(getContext())).getRoot();
         mProgressView.setTag(TAG_PROGRESS);
         mProgressView.setVisibility(GONE);
+        mProgressView.setFocusable(true);
+        mProgressView.setFocusableInTouchMode(true);
         LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.addRule(CENTER_IN_PARENT);
         addView(mProgressView, params);
@@ -109,6 +111,7 @@ public class ProgressLayout extends RelativeLayout {
                 mEmptyView.setVisibility(GONE);
                 mProgressView.setVisibility(VISIBLE);
                 setContentVisibility(false);
+                mProgressView.requestFocus();
                 break;
             case EMPTY:
                 mEmptyView.setVisibility(VISIBLE);
