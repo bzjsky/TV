@@ -166,7 +166,7 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         return new Callback() {
             @Override
             public void start() {
-                Notify.progress(requireActivity(), dialog -> cancelConfig());
+                Notify.progress(requireActivity());
             }
 
             @Override
@@ -181,12 +181,6 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
                 Notify.show(msg);
             }
         };
-    }
-
-    private void cancelConfig() {
-        VodConfig.get().cancel();
-        LiveConfig.get().cancel();
-        WallConfig.get().cancel();
     }
 
     @Override

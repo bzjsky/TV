@@ -299,12 +299,6 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
 
     @Override
     public boolean canBack() {
-        if (mBinding.progress.getRoot().getVisibility() == View.VISIBLE) {
-            VodConfig.get().cancel();
-            hideProgress();
-            showContent();
-            return false;
-        }
         if (mBinding.pager.getAdapter() == null || mBinding.pager.getAdapter().getCount() == 0) return true;
         if (!getFragment().canBack()) return true;
         getFragment().goBack();

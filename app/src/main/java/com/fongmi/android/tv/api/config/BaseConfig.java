@@ -20,7 +20,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.InterruptedIOException;
-import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -80,12 +79,6 @@ abstract class BaseConfig {
         OkHttp.dns().addAll(hosts);
     }
 
-    public void cancel() {
-        taskId.incrementAndGet();
-        if (future != null && !future.isDone()) future.cancel(true);
-        OkHttp.cancel(getTag());
-    }
-
     public void load(Callback callback) {
         int id = taskId.incrementAndGet();
         if (future != null && !future.isDone()) future.cancel(true);
@@ -114,8 +107,6 @@ abstract class BaseConfig {
     }
 
     protected boolean isCanceled(Throwable e) {
-        if (e instanceof SocketTimeoutException) return false;
-        if (e.getCause() instanceof SocketTimeoutException) return false;
         if ("Canceled".equals(e.getMessage())) return true;
         if (e instanceof InterruptedException) return true;
         if (e instanceof InterruptedIOException) return true;
