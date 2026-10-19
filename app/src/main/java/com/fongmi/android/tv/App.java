@@ -27,7 +27,6 @@ public class App extends Application implements Application.ActivityLifecycleCal
 
     private Activity activity;
     private Hook hook;
-    private PackageManager packageManager;
 
     public App() {
         instance = this;
@@ -76,7 +75,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        Init.set(this);
+        Init.set(base);
     }
 
     @Override
@@ -88,47 +87,12 @@ public class App extends Application implements Application.ActivityLifecycleCal
 
     @Override
     public PackageManager getPackageManager() {
-        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        for (StackTraceElement element : stack) {
-            String className = element.getClassName();
-            if (className.startsWith("android.webkit") || className.startsWith("org.chromium") || className.startsWith("com.android.webview")) {
-                return getBaseContext().getPackageManager();
-            }
-        }
-        if (hook != null) return hook;
-        for (StackTraceElement element : stack) {
-            String className = element.getClassName();
-            if (className.startsWith("com.github.catvod") || className.startsWith("com.fongmi.quickjs") || className.startsWith("com.base.model")) {
-                if (packageManager == null) {
-                    packageManager = new Hook(getBaseContext().getPackageManager(), getBaseContext().getPackageName());
-                }
-                return packageManager;
-            }
-        }
-        return getBaseContext().getPackageManager();
-    }
-
-    private String getCompatPackageName() {
-        return "com.fongmi.android.tv";
+        return hook != null ? hook : getBaseContext().getPackageManager();
     }
 
     @Override
     public String getPackageName() {
-        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        for (StackTraceElement element : stack) {
-            String className = element.getClassName();
-            if (className.startsWith("android.webkit") || className.startsWith("org.chromium") || className.startsWith("com.android.webview")) {
-                return getBaseContext().getPackageName();
-            }
-        }
-        if (hook != null) return hook.getPackageName();
-        for (StackTraceElement element : stack) {
-            String className = element.getClassName();
-            if (className.startsWith("com.github.catvod") || className.startsWith("com.fongmi.quickjs") || className.startsWith("com.base.model")) {
-                return getCompatPackageName();
-            }
-        }
-        return getBaseContext().getPackageName();
+        return hook != null ? hook.getPackageName() : getBaseContext().getPackageName();
     }
 
     @Override

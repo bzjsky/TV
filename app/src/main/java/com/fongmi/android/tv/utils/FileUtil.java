@@ -225,7 +225,7 @@ public class FileUtil {
     }
 
     public static Uri getShareUri(File file) {
-        return FileProvider.getUriForFile(App.get(), com.fongmi.android.tv.BuildConfig.APPLICATION_ID + ".provider", file);
+        return FileProvider.getUriForFile(App.get(), App.get().getPackageName() + ".provider", file);
     }
 
     private static String getMimeType(String fileName) {

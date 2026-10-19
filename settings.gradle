@@ -24,5 +24,4 @@ include ':app'
 include ':catvod'
 include ':chaquo'
 include ':quickjs'
-include ':hook'
 rootProject.name = "TV"
