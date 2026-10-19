@@ -6,6 +6,6 @@
 *build
 *.jks
 *.properties
-lib-*.aar
 /Release
 /docs
+.codegraph
