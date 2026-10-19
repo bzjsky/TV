@@ -42,9 +42,10 @@
             android:id="@+id/clock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFeatureSettings="tnum"
             android:textColor="@color/white"
             android:textSize="24sp"
-            tools:text="09:20:00" />
+            tools:text="10月19日 周一 09:20:00" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
