@@ -86,6 +86,11 @@ abstract class BaseConfig {
         callback.start();
     }
 
+    public void cancel() {
+        if (future != null) future.cancel(true);
+        OkHttp.cancel(getTag());
+    }
+
     protected void loadConfig(int id, Config config, Callback callback) {
         try {
             Server.get().start();

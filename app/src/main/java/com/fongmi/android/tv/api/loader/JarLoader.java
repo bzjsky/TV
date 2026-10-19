@@ -13,6 +13,9 @@ import com.github.catvod.utils.Path;
 
 import org.json.JSONObject;
 
+import okhttp3.Request;
+import okhttp3.Response;
+
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -81,6 +84,18 @@ public class JarLoader {
         }
     }
 
+    private boolean isNeedDownload(String url, File file) {
+        if (!file.exists() || file.length() == 0) return true;
+        try (Response response = OkHttp.client(2000).newCall(new Request.Builder().url(url).head().build()).execute()) {
+            if (!response.isSuccessful()) return false;
+            String len = response.header("Content-Length");
+            if (len != null && Long.parseLong(len) == file.length()) return false;
+        } catch (Throwable ignored) {
+            return false;
+        }
+        return true;
+    }
+
     public void parseJar(String key, String jar) {
         if (loaders.containsKey(key)) return;
         if (jar.startsWith("assets")) jar = UrlUtil.convert(jar);
@@ -94,7 +109,12 @@ public class JarLoader {
             if (!md5.isEmpty() && Crypto.equals(Path.jar(jar), md5)) {
                 load(key, Path.jar(jar));
             } else if (jar.startsWith("http")) {
-                load(key, Download.create(jar, Path.jar(jar)).get());
+                File file = Path.jar(jar);
+                if (!isNeedDownload(jar, file)) {
+                    load(key, file);
+                } else {
+                    load(key, Download.create(jar, file).get());
+                }
             } else if (jar.startsWith("file")) {
                 load(key, Path.local(jar));
             }

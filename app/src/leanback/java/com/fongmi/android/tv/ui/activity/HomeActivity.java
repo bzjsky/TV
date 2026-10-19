@@ -189,6 +189,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         mAdapter.add(new ListRow(mFuncAdapter = new ArrayObjectAdapter(new FuncPresenter(this))));
         mAdapter.add(R.string.home_history);
         mAdapter.add(R.string.home_recommend);
+        setFunc();
     }
 
     private void setTitle() {
@@ -220,6 +221,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
 
     private void showContent() {
         mBinding.progressLayout.showContent();
+        if (mFuncAdapter.size() == 0) setFunc();
         checkAction(getIntent());
         setFocus();
     }
@@ -467,6 +469,8 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     @Override
     protected void onBackInvoked() {
         if (mBinding.progressLayout.isProgress()) {
+            VodConfig.get().cancel();
+            LiveConfig.get().cancel();
             showContent();
         } else if (mPresenter.isDelete()) {
             setHistoryDelete(false);
