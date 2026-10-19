@@ -20,23 +20,42 @@ public class Decoder {
     private static final Pattern JS_URI = Pattern.compile("\"(\\.|\\.\\.)/(.?|.+?)\\.js\\?(.?|.+?)\"");
 
     public static String getJson(String url, String tag) throws Exception {
+        return getJson(url, tag, 0);
+    }
+
+    private static String getJson(String url, String tag, int count) throws Exception {
+        if (count > 3) throw new Exception("Too many redirects");
+        String key = getKey(url);
         try (Response res = OkHttp.newCall(url, tag).execute()) {
             HttpUrl httpUrl = res.request().url();
             int size = HttpUrl.parse(url).querySize();
             if (httpUrl.querySize() == size) url = httpUrl.toString();
-            return verify(url, res.body().string());
+            String data = verify(url, res.body().string(), key);
+            String redirect = getRedirect(data);
+            if (redirect.isEmpty()) return data;
+            redirect = UrlUtil.convert(UrlUtil.resolve(url, redirect));
+            if (!key.isEmpty() && !redirect.contains("#")) redirect += "#" + key;
+            return getJson(redirect, tag, count + 1);
         }
     }
 
-    private static String verify(String url, String data) throws Exception {
+    private static String getRedirect(String data) {
+        if (!Json.isObj(data)) return "";
+        return Json.safeString(Json.safeObject(Json.parse(data)), "redirect");
+    }
+
+
+    private static String verify(String url, String data, String key) throws Exception {
         if (data.isEmpty()) throw new Exception();
         if (Json.isObj(data)) return fix(url, data);
+        if (!key.isEmpty()) data = ecb(data, key);
         if (data.contains("**")) data = base64(data);
         if (data.startsWith("2423")) data = cbc(data.replaceAll("\\s+", ""));
         return fix(url, data);
     }
 
     private static String fix(String url, String data) {
+        url = getBase(url, data);
         Matcher matcher = JS_URI.matcher(data);
         while (matcher.find()) data = replace(url, data, matcher.group());
         if (data.contains("../")) data = data.replace("../", UrlUtil.resolve(url, "../"));
@@ -44,6 +63,11 @@ public class Decoder {
         if (data.contains("__JS1__")) data = data.replace("__JS1__", "./");
         if (data.contains("__JS2__")) data = data.replace("__JS2__", "../");
         return data;
+    }
+
+    private static String getBase(String url, String data) {
+        String origin = Json.safeString(Json.safeObject(Json.parse(data)), "origin");
+        return origin.isEmpty() ? url : origin;
     }
 
     private static String replace(String url, String data, String ext) {
@@ -71,6 +95,23 @@ public class Decoder {
     private static String extract(String data) {
         Matcher matcher = Pattern.compile("[A-Za-z0-9]{8}\\*\\*").matcher(data);
         return matcher.find() ? data.substring(data.indexOf(matcher.group()) + 10) : "";
+    }
+
+    private static String ecb(String data, String key) {
+        String decrypt = "";
+        try {
+            String outer = new String(Base64.decode(data.trim(), Base64.DEFAULT), StandardCharsets.UTF_8);
+            decrypt = Crypto.aes("AES/ECB", false, outer, true, key, null, false);
+        } catch (Exception ignored) {
+        }
+        if (decrypt.isEmpty()) {
+            decrypt = Crypto.aes("AES/ECB", false, data, true, key, null, false);
+        }
+        return decrypt;
+    }
+
+    private static String getKey(String url) {
+        return url.contains("#") ? url.substring(url.indexOf("#") + 1) : "";
     }
 
     private static String padEnd(String key) {
