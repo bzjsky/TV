@@ -13,7 +13,6 @@ import android.view.View;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
-import androidx.media3.common.VideoSize;
 import androidx.media3.ui.PlayerSeekView;
 import androidx.media3.ui.PlayerView;
 import androidx.viewbinding.ViewBinding;
@@ -392,11 +391,6 @@ public class CastActivity extends PlaybackActivity implements CustomKeyDownVod.L
         mBinding.widget.title.setSelected(true);
         resetMedia();
         start();
-    }
-
-    @Override
-    protected void onSizeChanged(VideoSize size) {
-        mBinding.widget.size.setText(player().getSizeText());
     }
 
     @Override

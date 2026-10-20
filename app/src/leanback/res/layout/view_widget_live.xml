@@ -25,16 +25,7 @@
             android:textSize="20sp"
             tools:text="民視" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/size"
-            style="@style/Shadow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/title"
-            android:layout_alignStart="@+id/title"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            tools:text="1920 x 1080" />
+
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/clock"

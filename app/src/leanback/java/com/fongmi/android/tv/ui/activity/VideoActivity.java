@@ -22,7 +22,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaMetadata;
 import androidx.media3.common.Player;
-import androidx.media3.common.VideoSize;
 import androidx.media3.ui.PlayerSeekView;
 import androidx.media3.ui.PlayerView;
 import androidx.recyclerview.widget.RecyclerView;
@@ -1244,10 +1243,6 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
         }
     }
 
-    @Override
-    protected void onSizeChanged(VideoSize size) {
-        mBinding.widget.size.setText(player().getSizeText());
-    }
 
     @Override
     public void onTimeChanged(long time) {
