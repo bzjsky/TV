@@ -333,6 +333,8 @@
 
     <!-- Error -->
     <string name="error_config_get">Configuration get failed</string>
+    <string name="config_cache_loaded">Failed to update config, loaded offline cache</string>
+    <string name="config_rollback">%1$s, restored previous configuration</string>
     <string name="error_play_next">It\'s the last episode!</string>
     <string name="error_play_prev">It\'s the first episode!</string>
     <string name="error_play_parse">Unable to parse url</string>

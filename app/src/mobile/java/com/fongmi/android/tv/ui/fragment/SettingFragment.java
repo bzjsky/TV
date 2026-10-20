@@ -150,19 +150,22 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     private void load(Config config) {
         switch (config.getType()) {
             case 0:
-                VodConfig.load(config, getCallback());
+                Config currentVod = VodConfig.get().getConfig();
+                VodConfig.load(config, getCallback(currentVod, config));
                 break;
             case 1:
-                LiveConfig.load(config, getCallback());
+                Config currentLive = LiveConfig.get().getConfig();
+                LiveConfig.load(config, getCallback(currentLive, config));
                 break;
             case 2:
                 Setting.putWall(0);
-                WallConfig.load(config, getCallback());
+                Config currentWall = WallConfig.get().getConfig();
+                WallConfig.load(config, getCallback(currentWall, config));
                 break;
         }
     }
 
-    private Callback getCallback() {
+    private Callback getCallback(Config current, Config target) {
         return new Callback() {
             @Override
             public void start() {
@@ -178,7 +181,16 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
             @Override
             public void error(String msg) {
                 Notify.dismiss();
-                Notify.show(msg);
+                if (current != null && !current.isEmpty() && !current.equals(target)) {
+                    Notify.show(getString(R.string.config_rollback, msg));
+                    switch (current.getType()) {
+                        case 0 -> VodConfig.load(current, new Callback());
+                        case 1 -> LiveConfig.load(current, new Callback());
+                        case 2 -> WallConfig.load(current, new Callback());
+                    }
+                } else {
+                    Notify.show(msg);
+                }
             }
         };
     }

@@ -332,6 +332,8 @@
 
     <!-- Error -->
     <string name="error_config_get">配置取得失败</string>
+    <string name="config_cache_loaded">配置更新失败，已加载离线缓存</string>
+    <string name="config_rollback">%1$s，已自动恢复原配置</string>
     <string name="error_play_next">已经是最后一集了！</string>
     <string name="error_play_prev">已经是第一集了！</string>
     <string name="error_play_parse">播放地址解析失败</string>

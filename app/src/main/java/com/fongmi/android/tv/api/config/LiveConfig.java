@@ -2,7 +2,10 @@ package com.fongmi.android.tv.api.config;
 
 import android.text.TextUtils;
 
+import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.Decoder;
+import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.api.LiveApi;
 import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.api.parser.LiveParser;
@@ -114,9 +117,22 @@ public class LiveConfig extends BaseConfig {
 
     @Override
     protected void load(Config config) throws Throwable {
-        String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
-        if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());
-        else parseText(config, json);
+        try {
+            String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+            if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());
+            else parseText(config, json);
+            config.setJson(json);
+        } catch (Throwable e) {
+            if (TextUtils.isEmpty(config.getJson()) && config.getId() != 0) {
+                Config dbConfig = Config.find(config.getId());
+                if (dbConfig != null) config.setJson(dbConfig.getJson());
+            }
+            if (TextUtils.isEmpty(config.getJson())) throw e;
+            String json = config.getJson();
+            if (Json.isObj(json)) checkJson(config, Json.parse(json).getAsJsonObject());
+            else parseText(config, json);
+            App.post(() -> Notify.show(R.string.config_cache_loaded));
+        }
     }
 
     @Override

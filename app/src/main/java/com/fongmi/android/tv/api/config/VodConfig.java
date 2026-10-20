@@ -3,7 +3,9 @@ package com.fongmi.android.tv.api.config;
 import android.text.TextUtils;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.api.Decoder;
+import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.android.tv.api.loader.BaseLoader;
 import com.fongmi.android.tv.bean.Config;
 import com.fongmi.android.tv.bean.Depot;
@@ -111,8 +113,19 @@ public class VodConfig extends BaseConfig {
 
     @Override
     protected void load(Config config) throws Throwable {
-        String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
-        checkJson(config, Json.parse(json).getAsJsonObject());
+        try {
+            String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+            checkJson(config, Json.parse(json).getAsJsonObject());
+            config.setJson(json);
+        } catch (Throwable e) {
+            if (TextUtils.isEmpty(config.getJson()) && config.getId() != 0) {
+                Config dbConfig = Config.find(config.getId());
+                if (dbConfig != null) config.setJson(dbConfig.getJson());
+            }
+            if (TextUtils.isEmpty(config.getJson())) throw e;
+            checkJson(config, Json.parse(config.getJson()).getAsJsonObject());
+            App.post(() -> Notify.show(R.string.config_cache_loaded));
+        }
     }
 
     @Override
