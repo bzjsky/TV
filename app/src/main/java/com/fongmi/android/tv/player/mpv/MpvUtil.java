@@ -18,8 +18,13 @@ import com.fongmi.android.tv.setting.SubtitleSetting;
 import com.github.catvod.utils.Path;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class MpvUtil {
+
+    private static final List<String> CACHE_OPTIONS = List.of("cache", "cache-on-disk", "demuxer-cache-dir", "cache-secs");
+    private static final List<String> PLAYER_OPTIONS = List.of("vo", "gpu-api", "gpu-context", "hwdec", "audio-spdif", "android-dolby-vision-output", "demuxer-dovi-profile7");
 
     private static final String ASSET_CA_FILE = "cacert.pem";
     private static final int VULKAN_1_2 = 0x00402000;
@@ -27,6 +32,15 @@ public final class MpvUtil {
     private static final double DEFAULT_SUB_SCALE = 1.0;
     private static final double MIN_SUB_POS = 0.0;
     private static final double MAX_SUB_POS = 150.0;
+
+    static List<String> getManagedOptionNames() {
+        List<String> options = new ArrayList<>(PLAYER_OPTIONS);
+        if (PreloadSetting.isEnabled()) options.addAll(CACHE_OPTIONS);
+        if (SubtitleSetting.getPosition() != 0.0f) options.add("sub-pos");
+        if (SubtitleSetting.getScale() != 1.0f) options.add("sub-scale");
+        if (SubtitleSetting.getSecondaryPosition() != 10.0f) options.add("secondary-sub-pos");
+        return options;
+    }
 
     public static boolean isAvailable() {
         try {

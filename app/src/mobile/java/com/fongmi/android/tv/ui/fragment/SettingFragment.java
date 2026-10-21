@@ -195,6 +195,10 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
         };
     }
 
+    private Callback getCallback() {
+        return getCallback(null, null);
+    }
+
     @Override
     public void setSite(Site item) {
         VodConfig.get().setHome(item);
