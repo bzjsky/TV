@@ -17,9 +17,14 @@ import com.fongmi.hook.Hook;
 import com.github.catvod.Init;
 import com.google.gson.Gson;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 public class App extends Application implements Application.ActivityLifecycleCallbacks {
 
     private static volatile App instance;
+    private static final Set<ClassLoader> SPIDER_LOADERS = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private final Handler handler;
     private final Gson gson;
@@ -27,6 +32,7 @@ public class App extends Application implements Application.ActivityLifecycleCal
 
     private Activity activity;
     private Hook hook;
+    private PackageManager spiderPackageManager;
 
     public App() {
         instance = this;
@@ -72,6 +78,45 @@ public class App extends Application implements Application.ActivityLifecycleCal
         this.hook = hook;
     }
 
+    public static void registerSpiderLoader(ClassLoader loader) {
+        if (loader != null) SPIDER_LOADERS.add(loader);
+    }
+
+    public static boolean isSpiderCalling() {
+        ClassLoader hostLoader = App.class.getClassLoader();
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+        for (StackTraceElement elem : stack) {
+            String clsName = elem.getClassName();
+            if (clsName.startsWith("android.webkit") || clsName.startsWith("org.chromium") || clsName.startsWith("com.android.webview")) {
+                return false;
+            }
+            try {
+                Class<?> caller = Class.forName(clsName);
+                ClassLoader cl = caller.getClassLoader();
+                if (cl != null && cl != hostLoader && cl != hostLoader.getParent()) {
+                    if (SPIDER_LOADERS.contains(cl)) return true;
+                    ClassLoader p = cl;
+                    while (p != null) {
+                        if (SPIDER_LOADERS.contains(p)) return true;
+                        p = p.getParent();
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+            if (clsName.startsWith("com.github.catvod") || clsName.startsWith("com.fongmi.quickjs") || clsName.startsWith("com.base.model") || clsName.startsWith("com.github.tvbox")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private PackageManager getSpiderPackageManager() {
+        if (spiderPackageManager == null) {
+            spiderPackageManager = new Hook(getBaseContext().getPackageManager(), getBaseContext().getPackageName());
+        }
+        return spiderPackageManager;
+    }
+
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
@@ -87,12 +132,16 @@ public class App extends Application implements Application.ActivityLifecycleCal
 
     @Override
     public PackageManager getPackageManager() {
-        return hook != null ? hook : getBaseContext().getPackageManager();
+        if (hook != null) return hook;
+        if (isSpiderCalling()) return getSpiderPackageManager();
+        return getBaseContext().getPackageManager();
     }
 
     @Override
     public String getPackageName() {
-        return hook != null ? hook.getPackageName() : getBaseContext().getPackageName();
+        if (hook != null) return hook.getPackageName();
+        if (isSpiderCalling()) return "com.fongmi.android.tv";
+        return getBaseContext().getPackageName();
     }
 
     @Override

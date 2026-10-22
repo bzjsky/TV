@@ -59,6 +59,7 @@ public class JarLoader {
         if (!Path.exists(file) || !file.setReadOnly()) return;
         String cachePath = Path.jar().getAbsolutePath();
         DexClassLoader loader = new DexClassLoader(file.getAbsolutePath(), cachePath, cachePath, App.get().getClassLoader());
+        App.registerSpiderLoader(loader);
         invokeInit(loader);
         invokeProxy(key, loader);
         loaders.put(key, loader);

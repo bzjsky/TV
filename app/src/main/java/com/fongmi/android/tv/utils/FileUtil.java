@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import androidx.core.content.FileProvider;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.BuildConfig;
 import com.fongmi.android.tv.R;
 import com.fongmi.android.tv.impl.Callback;
 import com.github.catvod.utils.Path;
@@ -225,7 +226,7 @@ public class FileUtil {
     }
 
     public static Uri getShareUri(File file) {
-        return FileProvider.getUriForFile(App.get(), App.get().getPackageName() + ".provider", file);
+        return FileProvider.getUriForFile(App.get(), BuildConfig.APPLICATION_ID + ".provider", file);
     }
 
     private static String getMimeType(String fileName) {

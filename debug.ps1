@@ -120,7 +120,8 @@ Write-Host "[✓] 安装成功! 耗时: $([math]::Round($duration.TotalSeconds, 
 # 6. 启动应用
 Write-Host ""
 Write-Host "[*] 正在模拟器中启动应用..." -ForegroundColor Cyan
-& adb -s $activeDevice shell am start -n com.fongmi.android.tv/.ui.activity.HomeActivity | Out-Null
+$TargetPackage = if ($Target -eq "mobile") { "com.cy.mobile" } else { "com.cy.tv" }
+& adb -s $activeDevice shell am start -n "$TargetPackage/com.fongmi.android.tv.ui.activity.HomeActivity" | Out-Null
 
 # 7. 清空并监听日志
 Write-Host "[*] 正在开启实时日志监听 (按 Ctrl + C 可退出日志)..." -ForegroundColor Green

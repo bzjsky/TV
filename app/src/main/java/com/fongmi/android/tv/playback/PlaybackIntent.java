@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.fongmi.android.tv.App;
+import com.fongmi.android.tv.BuildConfig;
 import com.fongmi.android.tv.utils.FileUtil;
 
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ public final class PlaybackIntent {
         List<ComponentName> components = new ArrayList<>();
         for (ResolveInfo resolveInfo : App.get().getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)) {
             String pkgName = resolveInfo.activityInfo.packageName;
-            if (pkgName.equals(App.get().getPackageName())) components.add(new ComponentName(pkgName, resolveInfo.activityInfo.name));
+            if (pkgName.equals(BuildConfig.APPLICATION_ID)) components.add(new ComponentName(pkgName, resolveInfo.activityInfo.name));
         }
         return Intent.createChooser(intent, null).putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, components.toArray(new ComponentName[0]));
     }
