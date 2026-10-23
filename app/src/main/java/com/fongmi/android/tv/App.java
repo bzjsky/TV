@@ -85,16 +85,22 @@ public class App extends Application implements Application.ActivityLifecycleCal
     public static boolean isSpiderCalling() {
         ClassLoader hostLoader = App.class.getClassLoader();
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
-        for (StackTraceElement elem : stack) {
-            String clsName = elem.getClassName();
+        int depth = Math.min(stack.length, 25);
+        for (int i = 0; i < depth; i++) {
+            String clsName = stack[i].getClassName();
             if (clsName.startsWith("android.webkit") || clsName.startsWith("org.chromium") || clsName.startsWith("com.android.webview")) {
                 return false;
+            }
+            if (clsName.startsWith("java.") || clsName.startsWith("android.") || clsName.startsWith("androidx.") || clsName.startsWith("sun.")) {
+                continue;
+            }
+            if (clsName.startsWith("com.github.catvod") || clsName.startsWith("com.fongmi.quickjs") || clsName.startsWith("com.base.model") || clsName.startsWith("com.github.tvbox")) {
+                return true;
             }
             try {
                 Class<?> caller = Class.forName(clsName);
                 ClassLoader cl = caller.getClassLoader();
                 if (cl != null && cl != hostLoader && cl != hostLoader.getParent()) {
-                    if (SPIDER_LOADERS.contains(cl)) return true;
                     ClassLoader p = cl;
                     while (p != null) {
                         if (SPIDER_LOADERS.contains(p)) return true;
@@ -102,9 +108,6 @@ public class App extends Application implements Application.ActivityLifecycleCal
                     }
                 }
             } catch (Throwable ignored) {
-            }
-            if (clsName.startsWith("com.github.catvod") || clsName.startsWith("com.fongmi.quickjs") || clsName.startsWith("com.base.model") || clsName.startsWith("com.github.tvbox")) {
-                return true;
             }
         }
         return false;
