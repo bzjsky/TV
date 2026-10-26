@@ -74,6 +74,7 @@ public class VodPlaybackController {
     public void updateVod(Vod item) {
         if (preloader.isRequestPending()) return;
         History history = state.getHistory();
+        if (history == null) return;
         replaceVodId(history, item.getId());
         mergeFlags(item.getFlags());
         updateHistory(history, item);
@@ -126,6 +127,7 @@ public class VodPlaybackController {
         state.setPlayingRequest(request);
         state.setUseParse(result.isUseParse());
         result.getUrl().set(state.getQualityPosition());
+        if (!result.getList().isEmpty()) updateVod(result.getVod());
     }
 
     private void renderPlaybackResult(Result result) {

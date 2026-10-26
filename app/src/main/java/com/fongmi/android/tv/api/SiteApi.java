@@ -148,6 +148,7 @@ public class SiteApi {
             String playerContent = site.recent().spider().playerContent(flag, id, VodConfig.get().getFlags());
             SpiderDebug.log("player", playerContent);
             Result result = Result.fromJson(playerContent);
+            result.getVod().setFlags();
             if (result.getFlag().isEmpty()) result.setFlag(flag);
             result.setUrl(Source.get().fetch(result));
             result.setHeader(site.getHeader());
@@ -160,6 +161,7 @@ public class SiteApi {
             String playerContent = call(site, params);
             SpiderDebug.log("player", playerContent);
             Result result = Result.fromJson(playerContent);
+            result.getVod().setFlags();
             if (result.getFlag().isEmpty()) result.setFlag(flag);
             result.setUrl(Source.get().fetch(result));
             result.setHeader(site.getHeader());
