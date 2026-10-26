@@ -103,7 +103,14 @@ def action(ru, action):
 
 
 def destroy(ru):
+    closeDialog(ru)
     ru.destroy()
+
+
+def closeDialog(ru):
+    dialog = getattr(ru, '_dialog', None)
+    if dialog is not None:
+        dialog.close()
 
 
 def run():

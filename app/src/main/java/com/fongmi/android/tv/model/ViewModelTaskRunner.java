@@ -30,7 +30,7 @@ final class ViewModelTaskRunner<T extends Enum<T>> {
         int currentId = taskId.incrementAndGet();
         ListenableFuture<?> old = futures.get(type);
         if (old != null) old.cancel(true);
-        FluentFuture<R> future = FluentFuture.from(Task.executor().submit(callable)).withTimeout(timeoutMs, TimeUnit.MILLISECONDS, Task.scheduler());
+        FluentFuture<R> future = FluentFuture.from(Task.submit(callable, timeoutMs));
         futures.put(type, future);
         future.addCallback(Task.callback(
                 result -> {

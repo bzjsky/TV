@@ -66,6 +66,18 @@ class Spider(metaclass=ABCMeta):
     def getName(self):
         pass
 
+    def getActivity(self):
+        from com.github.catvod import Runtime
+        return Runtime.activity()
+
+    def dialog(self, options, onAction=None):
+        dialog = getattr(self, '_dialog', None)
+        if dialog is None:
+            from _tv_dialog import DialogAdapter
+            self._dialog = DialogAdapter()
+            dialog = self._dialog
+        return dialog.show(options, onAction)
+
     def getDependence(self):
         return []
 

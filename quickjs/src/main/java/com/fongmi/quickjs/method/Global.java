@@ -7,14 +7,17 @@ import androidx.annotation.NonNull;
 
 import com.fongmi.quickjs.bean.Req;
 import com.fongmi.quickjs.utils.Connect;
-import com.github.catvod.utils.Crypto;
 import com.github.catvod.Proxy;
+import com.github.catvod.utils.Crypto;
+import com.github.catvod.utils.Dialog;
 import com.github.catvod.utils.Trans;
 import com.github.catvod.utils.UriUtil;
 import com.whl.quickjs.wrapper.JSFunction;
 import com.whl.quickjs.wrapper.JSMethod;
 import com.whl.quickjs.wrapper.JSObject;
 import com.whl.quickjs.wrapper.QuickJSContext;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -36,6 +39,7 @@ public class Global {
     private final AtomicInteger timerId;
     private final QuickJSContext ctx;
     private final Timer timer;
+    private final Dialog dialog = new Dialog();
 
     private volatile boolean destroyed;
 
@@ -54,6 +58,7 @@ public class Global {
 
     public void destroy() {
         destroyed = true;
+        dialog.close();
         for (Timeout timeout : timers.values()) timeout.cancelAndRelease();
         timers.clear();
         timer.cancel();
@@ -80,6 +85,29 @@ public class Global {
             return true;
         } catch (Throwable ignored) {
             return false;
+        }
+    }
+
+    @Keep
+    @JSMethod
+    public JSObject dialog(JSObject options) {
+        if (options == null) return null;
+        try {
+            JSONObject opt = new JSONObject(options.stringify());
+            JSFunction onAction = options.getJSFunction("onAction");
+            JSONObject res = dialog.show(opt, onAction == null ? null : event -> {
+                try {
+                    JSObject jsEvent = (JSObject) ctx.parse(event.toString());
+                    Object ret = onAction.call(jsEvent);
+                    if (ret instanceof JSObject jo) return new JSONObject(jo.stringify());
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+                return null;
+            });
+            return res == null ? null : (JSObject) ctx.parse(res.toString());
+        } catch (Exception e) {
+            return null;
         }
     }
 

@@ -1,8 +1,11 @@
 package com.github.catvod.crawler;
 
+import android.app.Activity;
 import android.content.Context;
 
+import com.github.catvod.Runtime;
 import com.github.catvod.net.OkHttp;
+import com.github.catvod.utils.Dialog;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +17,7 @@ import okhttp3.OkHttpClient;
 public abstract class Spider {
 
     public String siteKey;
+    public final Dialog dialog = new Dialog();
 
     public static Dns safeDns() {
         return OkHttp.dns();
@@ -21,6 +25,10 @@ public abstract class Spider {
 
     public static OkHttpClient client() {
         return OkHttp.client();
+    }
+
+    public Activity getActivity() {
+        return Runtime.activity();
     }
 
     public void init(Context context) throws Exception {

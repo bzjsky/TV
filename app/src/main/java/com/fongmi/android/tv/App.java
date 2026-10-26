@@ -12,9 +12,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.os.HandlerCompat;
 
+import com.fongmi.android.tv.ui.dialog.SpiderDialog;
 import com.fongmi.android.tv.utils.Notify;
 import com.fongmi.hook.Hook;
 import com.github.catvod.Init;
+import com.github.catvod.Runtime;
 import com.google.gson.Gson;
 
 import java.util.Collections;
@@ -124,6 +126,10 @@ public class App extends Application implements Application.ActivityLifecycleCal
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
         Init.set(base);
+        Runtime.set(base);
+        Runtime.setActivity(App::activity);
+        Runtime.setToast(text -> App.post(() -> Notify.show(text)));
+        Runtime.setDialog(SpiderDialog::show);
     }
 
     @Override

@@ -42,7 +42,10 @@ public class JarLoader {
     }
 
     public void clear() {
-        spiders.values().forEach(Spider::destroy);
+        spiders.values().forEach(spider -> {
+            spider.dialog.close();
+            spider.destroy();
+        });
         loaders.clear();
         methods.clear();
         spiders.clear();
@@ -137,15 +140,17 @@ public class JarLoader {
         String jaKey = Crypto.md5(jar);
         String spKey = jaKey + key;
         return spiders.computeIfAbsent(spKey, k -> {
+            Spider spider = null;
             try {
                 parseJar(jaKey, jar);
                 DexClassLoader loader = loaders.get(jaKey);
                 if (loader == null) return new SpiderNull();
-                Spider spider = (Spider) loader.loadClass("com.github.catvod.spider." + api.split("csp_")[1]).newInstance();
+                spider = (Spider) loader.loadClass("com.github.catvod.spider." + api.split("csp_")[1]).newInstance();
                 spider.siteKey = key;
                 spider.init(App.get(), ext);
                 return spider;
             } catch (Throwable e) {
+                if (spider != null) spider.dialog.close();
                 e.printStackTrace();
                 return new SpiderNull();
             }
