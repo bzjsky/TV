@@ -431,6 +431,18 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
             }
 
             @Override
+            public void seekTo(long positionMs) {
+                if (player.getTimeshift().isActive()) player.getTimeshift().seekTo(positionMs);
+                else super.seekTo(positionMs);
+            }
+
+            @Override
+            public void seekTo(int mediaItemIndex, long positionMs) {
+                if (player.getTimeshift().isActive()) player.getTimeshift().seekTo(positionMs);
+                else super.seekTo(mediaItemIndex, positionMs);
+            }
+
+            @Override
             public void seekToPrevious() {
                 dispatchPrev();
             }
@@ -527,6 +539,11 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
         playerCallbacks.forEach(callback -> callback.onDanmakuSent(text));
     }
 
+    @Override
+    public void onTimeshiftChanged() {
+        playerCallbacks.forEach(PlayerCallback::onTimeshiftChanged);
+    }
+
     private final Player.Listener listener = new Player.Listener() {
         @Override
         public void onPlaybackStateChanged(int state) {
@@ -619,6 +636,9 @@ public class PlaybackService extends MediaLibraryService implements MediaLibrary
         }
 
         default void onDanmakuSent(String text) {
+        }
+
+        default void onTimeshiftChanged() {
         }
     }
 

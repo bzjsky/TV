@@ -10,6 +10,7 @@ import com.fongmi.android.tv.bean.Danmaku;
 import com.fongmi.android.tv.bean.Drm;
 import com.fongmi.android.tv.bean.Result;
 import com.fongmi.android.tv.bean.Sub;
+import com.fongmi.android.tv.bean.Timeshift;
 import com.fongmi.android.tv.setting.Setting;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.google.common.net.HttpHeaders;
@@ -30,6 +31,7 @@ public class PlaySpec {
     private String key;
     private String url;
     private Drm drm;
+    private Timeshift timeshift;
 
     private PlaySpec(String key, String url, Map<String, String> headers, String format, Drm drm, List<Sub> subs, List<Danmaku> danmakus, MediaMetadata metadata) {
         this.key = key;
@@ -54,11 +56,15 @@ public class PlaySpec {
     }
 
     public static PlaySpec from(Result result, String key, MediaMetadata metadata) {
-        return new PlaySpec(key, result.getRealUrl(), result.getHeader(), result.getFormat(), result.getDrm(), result.getSubs(), result.getDanmaku(), metadata);
+        PlaySpec spec = new PlaySpec(key, result.getRealUrl(), result.getHeader(), result.getFormat(), result.getDrm(), result.getSubs(), result.getDanmaku(), metadata);
+        spec.timeshift = result.getTimeshift();
+        return spec;
     }
 
     public static PlaySpec fromParse(Result result, String key, MediaMetadata metadata) {
-        return new PlaySpec(key, null, null, result.getFormat(), result.getDrm(), result.getSubs(), result.getDanmaku(), metadata);
+        PlaySpec spec = new PlaySpec(key, null, null, result.getFormat(), result.getDrm(), result.getSubs(), result.getDanmaku(), metadata);
+        spec.timeshift = result.getTimeshift();
+        return spec;
     }
 
     public String getKey() {
@@ -99,6 +105,10 @@ public class PlaySpec {
 
     public Drm getDrm() {
         return drm;
+    }
+
+    public Timeshift getTimeshift() {
+        return timeshift;
     }
 
     public List<Sub> getSubs() {
