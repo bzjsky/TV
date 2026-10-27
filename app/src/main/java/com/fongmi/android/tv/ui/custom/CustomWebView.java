@@ -132,7 +132,8 @@ public class CustomWebView extends WebView implements DialogInterface.OnDismissL
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 if (url.equals(BLANK)) return;
-                evaluate(getScript(url), 0);
+                WebViewClicker.ensureViewport(CustomWebView.this);
+                evaluate(getScript(url), 0, () -> WebViewClicker.click(CustomWebView.this, Sniffer.getClick(Uri.parse(url)), () -> !stopped));
             }
 
             @Override
@@ -177,13 +178,16 @@ public class CustomWebView extends WebView implements DialogInterface.OnDismissL
         return script;
     }
 
-    private void evaluate(List<String> script, int index) {
-        if (index >= script.size()) return;
+    private void evaluate(List<String> script, int index, Runnable onComplete) {
+        if (index >= script.size()) {
+            if (onComplete != null) onComplete.run();
+            return;
+        }
         String js = script.get(index);
         if (TextUtils.isEmpty(js)) {
-            evaluate(script, index + 1);
+            evaluate(script, index + 1, onComplete);
         } else {
-            evaluateJavascript(js, value -> evaluate(script, index + 1));
+            evaluateJavascript(js, value -> evaluate(script, index + 1, onComplete));
         }
     }
 

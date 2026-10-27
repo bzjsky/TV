@@ -22,28 +22,38 @@ import java.util.regex.Pattern;
 public class Sniffer {
 
     public static final Pattern CLICKER = Pattern.compile("\\[a=cr:(\\{.*?\\})\\/](.*?)\\[\\/a]");
-    public static final Pattern AI_PUSH = Pattern.compile("(https?|thunder|magnet|ed2k|video):\\S+");
-    public static final Pattern SNIFFER = Pattern.compile("https?://[^\\s]{12,}\\.(?:m3u8|mp4|mkv|flv|mp3|m4a|aac|mpd)(?:\\?.*)?|https?://.*?video/tos[^\\s]*|rtmp:[^\\s]+");
+    public static final Pattern AI_PUSH = Pattern.compile("(https?|ftp|thunder|magnet|ed2k|video|webview|push):\\S+", Pattern.CASE_INSENSITIVE);
+    public static final Pattern SNIFFER = Pattern.compile("https?://[^\\s]{12,}\\.(?:m3u8|mp4|mkv|flv|mp3|m4a|aac|mpd)|https?://.*?video/tos[^\\s]*|rtmp:[^\\s]+");
 
     public static String getUrl(String text) {
-        if (Json.isObj(text) || text.contains("$")) return text;
+        if ("push".equals(UrlUtil.scheme(text)) || "video".equals(UrlUtil.scheme(text)) || UrlUtil.isWebView(text) || Json.isObj(text)) return text;
         Matcher m = AI_PUSH.matcher(text);
-        if (m.find()) return m.group(0);
-        return text;
+        if (!m.find()) return text;
+        String url = m.group(0);
+        if (text.contains("$") && (text.substring(0, m.start()).contains("$") || m.find())) return text;
+        return url;
     }
 
     public static boolean isVideoFormat(String url) {
-        Rule rule = getRule(UrlUtil.uri(url));
+        return isVideoFormat(url, getRule(UrlUtil.uri(url)));
+    }
+
+    static boolean isVideoFormat(String url, Rule rule) {
         for (String exclude : rule.getExclude()) if (url.contains(exclude)) return false;
-        for (String exclude : rule.getExclude()) if (Pattern.compile(exclude).matcher(url).find()) return false;
+        for (Pattern exclude : rule.getExcludePatterns()) if (exclude.matcher(url).find()) return false;
         for (String regex : rule.getRegex()) if (url.contains(regex)) return true;
-        for (String regex : rule.getRegex()) if (Pattern.compile(regex).matcher(url).find()) return true;
-        if (url.contains("url=http") || url.contains("v=http") || url.contains(".html")) return false;
+        for (Pattern regex : rule.getRegexPatterns()) if (regex.matcher(url).find()) return true;
+        String path = url.contains("?") ? url.substring(0, url.indexOf("?")) : url;
+        if (url.contains("url=http") || url.contains("v=http") || path.contains(".html")) return false;
         return SNIFFER.matcher(url).find();
     }
 
     public static List<String> getScript(Uri uri) {
         return getRule(uri).getScript();
+    }
+
+    public static List<String> getClick(Uri uri) {
+        return getRule(uri).getClick();
     }
 
     private static Rule getRule(Uri uri) {
