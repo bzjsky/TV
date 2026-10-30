@@ -15,10 +15,12 @@ import com.fongmi.android.tv.bean.Site;
 import com.fongmi.android.tv.event.ConfigEvent;
 import com.fongmi.android.tv.event.RefreshEvent;
 import com.fongmi.android.tv.impl.Callback;
+import com.fongmi.android.tv.utils.Task;
 import com.fongmi.android.tv.utils.UrlUtil;
 import com.github.catvod.bean.Doh;
 import com.github.catvod.bean.Header;
 import com.github.catvod.bean.Proxy;
+import com.github.catvod.utils.Crypto;
 import com.github.catvod.utils.Json;
 import com.google.gson.JsonObject;
 
@@ -63,6 +65,8 @@ public class VodConfig extends BaseConfig {
         return get().getSites().indexOf(get().getHome());
     }
 
+    private volatile boolean hasPendingUpdate;
+
     public static boolean hasParse() {
         return !get().getParses().isEmpty();
     }
@@ -90,6 +94,7 @@ public class VodConfig extends BaseConfig {
         flags = null;
         rules = null;
         parses = null;
+        hasPendingUpdate = false;
         BaseLoader.get().clear();
         RuleConfig.get().invalidate();
         return this;
@@ -111,8 +116,44 @@ public class VodConfig extends BaseConfig {
         ConfigEvent.vod();
     }
 
+    public boolean hasPendingUpdate() {
+        return hasPendingUpdate;
+    }
+
+    public void applyPending() {
+        if (!hasPendingUpdate) return;
+        hasPendingUpdate = false;
+        clear().init().load(new Callback() {
+            @Override
+            public void success() {
+                Notify.show(R.string.config_updated);
+            }
+        });
+    }
+
+    private void checkSilentUpdate(Config config) {
+        try {
+            String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
+            if (TextUtils.isEmpty(json)) return;
+            if (Crypto.md5(config.getJson()).equals(Crypto.md5(json))) return;
+            JsonObject object = Json.parse(json).getAsJsonObject();
+            String spider = Json.safeString(object, "spider");
+            if (!TextUtils.isEmpty(spider)) BaseLoader.get().parseJar(spider, false);
+            config.setJson(json);
+            config.update();
+            hasPendingUpdate = true;
+            RefreshEvent.update();
+        } catch (Throwable ignored) {
+        }
+    }
+
     @Override
     protected void load(Config config) throws Throwable {
+        if (!TextUtils.isEmpty(config.getJson())) {
+            checkJson(config, Json.parse(config.getJson()).getAsJsonObject());
+            Task.execute(() -> checkSilentUpdate(config));
+            return;
+        }
         try {
             String json = Decoder.getJson(UrlUtil.convert(config.getUrl()), TAG);
             checkJson(config, Json.parse(json).getAsJsonObject());

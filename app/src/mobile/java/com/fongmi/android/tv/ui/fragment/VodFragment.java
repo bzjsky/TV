@@ -86,6 +86,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     protected void initView() {
         EventBus.getDefault().register(this);
         mBinding.title.setSelected(true);
+        mBinding.updateNotice.setVisibility(VodConfig.get().hasPendingUpdate() ? View.VISIBLE : View.GONE);
         setRecyclerView();
         setViewModel();
         showProgress();
@@ -97,6 +98,7 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     protected void initEvent() {
         mBinding.top.setOnClickListener(this::onTop);
         mBinding.logo.setOnClickListener(this::onLogo);
+        mBinding.updateNotice.setOnClickListener(v -> applyConfigUpdate());
         mBinding.link.setOnClickListener(this::onLink);
         mBinding.title.setOnClickListener(this::onSite);
         mBinding.filter.setOnClickListener(this::onFilter);
@@ -221,6 +223,11 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
         return mResult == null ? new Result() : mResult;
     }
 
+    private void applyConfigUpdate() {
+        mBinding.updateNotice.setVisibility(View.GONE);
+        VodConfig.get().applyPending();
+    }
+
     private void setLogo() {
         ImgUtil.logo(mBinding.logo);
     }
@@ -233,6 +240,9 @@ public class VodFragment extends BaseFragment implements ConfigListener, SiteLis
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onRefreshEvent(RefreshEvent event) {
         switch (event.getType()) {
+            case UPDATE:
+                mBinding.updateNotice.setVisibility(View.VISIBLE);
+                break;
             case HOME:
                 setTitle();
             case SIZE:

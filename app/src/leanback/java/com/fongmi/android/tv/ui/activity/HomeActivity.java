@@ -129,11 +129,13 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         initConfig();
         setTitle();
         setLogo();
+        mBinding.updateNotice.setVisibility(VodConfig.get().hasPendingUpdate() ? View.VISIBLE : View.GONE);
     }
 
     @Override
     protected void initEvent() {
         mBinding.title.setListener(this);
+        mBinding.updateNotice.setOnClickListener(v -> applyConfigUpdate());
         mBinding.recycler.addOnChildViewHolderSelectedListener(new OnChildViewHolderSelectedListener() {
             @Override
             public void onChildViewHolderSelected(@NonNull RecyclerView parent, @Nullable RecyclerView.ViewHolder child, int position, int subposition) {
@@ -326,6 +328,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
                 RefreshEvent.history();
                 RefreshEvent.home();
                 setLogo();
+                mBinding.updateNotice.setVisibility(VodConfig.get().hasPendingUpdate() ? View.VISIBLE : View.GONE);
                 break;
             case COMMON:
                 setFunc();
@@ -345,6 +348,9 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
                 break;
             case HISTORY:
                 getHistory();
+                break;
+            case UPDATE:
+                mBinding.updateNotice.setVisibility(View.VISIBLE);
                 break;
             case SIZE:
                 getVideo();
@@ -437,8 +443,17 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         SiteDialog.create().show(this);
     }
 
+    private void applyConfigUpdate() {
+        mBinding.updateNotice.setVisibility(View.GONE);
+        VodConfig.get().applyPending();
+    }
+
     @Override
     public void onRefresh() {
+        if (VodConfig.get().hasPendingUpdate()) {
+            applyConfigUpdate();
+            return;
+        }
         getVideo();
     }
 
@@ -450,7 +465,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (KeyUtil.isMenuKey(event)) showDialog();
-        if (KeyUtil.isActionDown(event) & KeyUtil.isDownKey(event) && getCurrentFocus() == mBinding.title) return mBinding.recycler.getChildAt(0).requestFocus();
+        if (KeyUtil.isActionDown(event) & KeyUtil.isDownKey(event) && (getCurrentFocus() == mBinding.title || getCurrentFocus() == mBinding.updateNotice)) return mBinding.recycler.getChildAt(0).requestFocus();
         return super.dispatchKeyEvent(event);
     }
 
