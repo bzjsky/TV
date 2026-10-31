@@ -90,6 +90,11 @@ public class BaseLoader {
         if (recent) jarLoader.setRecent(key);
     }
 
+    public void checkJar(String jar) {
+        if (TextUtils.isEmpty(jar)) return;
+        jarLoader.checkJar(jar);
+    }
+
     public DexClassLoader dex(String jar) {
         return jarLoader.dex(jar);
     }

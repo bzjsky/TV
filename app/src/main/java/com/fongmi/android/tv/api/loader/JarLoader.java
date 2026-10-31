@@ -100,25 +100,29 @@ public class JarLoader {
         return true;
     }
 
+    public void checkJar(String jar) {
+        if (jar.startsWith("assets")) jar = UrlUtil.convert(jar);
+        String[] texts = jar.split(";md5;");
+        String md5 = texts.length > 1 ? texts[1].trim() : "";
+        if (md5.startsWith("http")) md5 = OkHttp.string(md5).trim();
+        jar = texts[0];
+        if (!jar.startsWith("http")) return;
+        File file = Path.jar(jar);
+        boolean need = !md5.isEmpty() ? !Crypto.equals(file, md5) : isNeedDownload(jar, file);
+        if (need) Download.create(jar, file).get();
+    }
+
     public void parseJar(String key, String jar) {
         if (loaders.containsKey(key)) return;
         if (jar.startsWith("assets")) jar = UrlUtil.convert(jar);
         Object lock = locks.computeIfAbsent(key, k -> new Object());
         synchronized (lock) {
             if (loaders.containsKey(key)) return;
-            String[] texts = jar.split(";md5;");
-            String md5 = texts.length > 1 ? texts[1].trim() : "";
-            if (md5.startsWith("http")) md5 = OkHttp.string(md5).trim();
-            jar = texts[0];
-            if (!md5.isEmpty() && Crypto.equals(Path.jar(jar), md5)) {
-                load(key, Path.jar(jar));
-            } else if (jar.startsWith("http")) {
+            jar = jar.split(";md5;")[0];
+            if (jar.startsWith("http")) {
                 File file = Path.jar(jar);
-                if (!isNeedDownload(jar, file)) {
-                    load(key, file);
-                } else {
-                    load(key, Download.create(jar, file).get());
-                }
+                if (file.exists() && file.length() > 0) load(key, file);
+                else load(key, Download.create(jar, file).get());
             } else if (jar.startsWith("file")) {
                 load(key, Path.local(jar));
             }

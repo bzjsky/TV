@@ -138,7 +138,7 @@ public class VodConfig extends BaseConfig {
             if (Crypto.md5(config.getJson()).equals(Crypto.md5(json))) return;
             JsonObject object = Json.parse(json).getAsJsonObject();
             String spider = Json.safeString(object, "spider");
-            if (!TextUtils.isEmpty(spider)) BaseLoader.get().parseJar(spider, false);
+            if (!TextUtils.isEmpty(spider)) BaseLoader.get().checkJar(spider);
             config.setJson(json);
             config.update();
             hasPendingUpdate = true;
