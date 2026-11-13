@@ -357,9 +357,12 @@ public class SettingFragment extends BaseFragment implements ConfigListener, Sit
     }
 
     private void initConfig() {
-        VodConfig.get().init().load(getCallback());
-        LiveConfig.get().init().load();
-        WallConfig.get().init().load();
+        VodConfig.get().init();
+        LiveConfig.get().init();
+        WallConfig.get().init();
+        VodConfig.get().load(getCallback());
+        LiveConfig.get().load();
+        WallConfig.get().load();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

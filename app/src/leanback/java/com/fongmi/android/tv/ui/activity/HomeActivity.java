@@ -129,13 +129,11 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         initConfig();
         setTitle();
         setLogo();
-        mBinding.updateNotice.setVisibility(VodConfig.get().hasPendingUpdate() ? View.VISIBLE : View.GONE);
     }
 
     @Override
     protected void initEvent() {
         mBinding.title.setListener(this);
-        mBinding.updateNotice.setOnClickListener(v -> applyConfigUpdate());
         mBinding.recycler.addOnChildViewHolderSelectedListener(new OnChildViewHolderSelectedListener() {
             @Override
             public void onChildViewHolderSelected(@NonNull RecyclerView parent, @Nullable RecyclerView.ViewHolder child, int position, int subposition) {
@@ -201,9 +199,11 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     }
 
     private void initConfig() {
-        VodConfig.get().init().load(getCallback());
-        LiveConfig.get().init().load();
+        VodConfig.get().init();
+        LiveConfig.get().init();
         WallConfig.get().init();
+        VodConfig.get().load(getCallback());
+        LiveConfig.get().load();
     }
 
     private Callback getCallback() {
@@ -279,6 +279,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         items.add(Func.create(R.string.home_keep));
         items.add(Func.create(R.string.home_push));
         items.add(Func.create(R.string.home_setting));
+        if (VodConfig.get().hasPendingUpdate()) items.add(Func.create(R.string.home_refresh));
         mFuncAdapter.setItems(items, new BaseDiffCallback<Func>());
     }
 
@@ -328,7 +329,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
                 RefreshEvent.history();
                 RefreshEvent.home();
                 setLogo();
-                mBinding.updateNotice.setVisibility(VodConfig.get().hasPendingUpdate() ? View.VISIBLE : View.GONE);
+                setFunc();
                 break;
             case COMMON:
                 setFunc();
@@ -350,7 +351,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
                 getHistory();
                 break;
             case UPDATE:
-                mBinding.updateNotice.setVisibility(View.VISIBLE);
+                setFunc();
                 break;
             case SIZE:
                 getVideo();
@@ -402,6 +403,7 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
         else if (item.getResId() == R.string.home_push) PushActivity.start(this);
         else if (item.getResId() == R.string.home_search) SearchActivity.start(this);
         else if (item.getResId() == R.string.home_setting) SettingActivity.start(this);
+        else if (item.getResId() == R.string.home_refresh) applyConfigUpdate();
     }
 
     @Override
@@ -444,8 +446,8 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     }
 
     private void applyConfigUpdate() {
-        mBinding.updateNotice.setVisibility(View.GONE);
         VodConfig.get().applyPending();
+        setFunc();
     }
 
     @Override
@@ -465,7 +467,9 @@ public class HomeActivity extends BaseActivity implements CustomTitleView.Listen
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (KeyUtil.isMenuKey(event)) showDialog();
-        if (KeyUtil.isActionDown(event) & KeyUtil.isDownKey(event) && (getCurrentFocus() == mBinding.title || getCurrentFocus() == mBinding.updateNotice)) return mBinding.recycler.getChildAt(0).requestFocus();
+        if (KeyUtil.isActionDown(event) && KeyUtil.isDownKey(event) && getCurrentFocus() == mBinding.title) {
+            if (mBinding.recycler.getChildAt(0) != null) return mBinding.recycler.getChildAt(0).requestFocus();
+        }
         return super.dispatchKeyEvent(event);
     }
 

@@ -60,11 +60,12 @@ abstract class BaseConfig {
     }
 
     public boolean needSync(String url) {
-        return sync || config == null || TextUtils.isEmpty(config.getUrl()) || url.equals(config.getUrl());
+        Config c = getConfig();
+        return sync || c.isEmpty() || url.equals(c.getUrl());
     }
 
     public Config getConfig() {
-        return config == null ? defaultConfig() : config;
+        return config == null ? config = defaultConfig() : config;
     }
 
     protected void setHeaders(List<Header> headers) {
