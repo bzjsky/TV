@@ -73,6 +73,12 @@ public class SpeedSetting {
         return MIN;
     }
 
+    public static float prev(float speed) {
+        float value = clamp(speed);
+        for (int i = PRESETS.length - 1; i >= 0; i--) if (PRESETS[i] < value - EPSILON) return PRESETS[i];
+        return MAX;
+    }
+
     public static String format(float speed) {
         return formatValue(speed) + "x";
     }

@@ -308,6 +308,8 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
         mBinding.control.action.prev.setOnClickListener(view -> checkPrev());
         mBinding.control.action.scale.setOnClickListener(view -> onScale());
         mBinding.control.action.speed.setOnClickListener(view -> onSpeed());
+        mBinding.control.action.speed.setUpListener(() -> onSpeedAdjust(true));
+        mBinding.control.action.speed.setDownListener(() -> onSpeedAdjust(false));
         mBinding.control.action.reset.setOnClickListener(view -> onReset());
         mBinding.control.action.replay.setOnClickListener(view -> onReplay());
         mBinding.control.action.parse.setOnClickListener(view -> onParse());
@@ -630,7 +632,8 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
         mHistory = history;
         mBinding.control.action.opening.setText(history.getOpening() <= 0 ? getString(R.string.play_op) : Util.timeMs(history.getOpening()));
         mBinding.control.action.ending.setText(history.getEnding() <= 0 ? getString(R.string.play_ed) : Util.timeMs(history.getEnding()));
-        player().setSpeed(SpeedSetting.getPlayback());
+        float initialSpeed = history.getSpeed() > 0 ? history.getSpeed() : SpeedSetting.getPlayback();
+        player().setSpeed(initialSpeed);
         setScale(getScale());
         setPartAdapter();
     }
@@ -922,8 +925,16 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
         hideControl();
     }
 
+    private void onSpeedAdjust(boolean up) {
+        float speed = PlaybackAction.adjustSpeed(player(), mBinding.widget.message, up);
+        SpeedSetting.putPlayback(speed);
+        if (mHistory != null) mHistory.setSpeed(speed);
+    }
+
     private boolean onSpeedLong() {
-        SpeedSetting.putPlayback(PlaybackAction.toggleSpeed(player(), mBinding.widget.message));
+        float speed = PlaybackAction.toggleSpeed(player(), mBinding.widget.message);
+        SpeedSetting.putPlayback(speed);
+        if (mHistory != null) mHistory.setSpeed(speed);
         return true;
     }
 
@@ -1028,9 +1039,9 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
     }
 
     private void showProgress() {
+        hideCenter();
         mBinding.progress.getRoot().setVisibility(View.VISIBLE);
         App.post(mR3, 0);
-        hideCenter();
         hideError();
     }
 
@@ -1053,6 +1064,7 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
     }
 
     private void showInfo() {
+        if (isVisible(mBinding.progress.getRoot())) return;
         mBinding.widget.top.setVisibility(View.VISIBLE);
         mBinding.widget.center.setVisibility(View.VISIBLE);
         mBinding.widget.duration.setText(player().getDurationTime());
@@ -1355,15 +1367,16 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
 
     @Override
     public void onSeeking(long time) {
+        hideProgress();
         mBinding.widget.center.setVisibility(View.VISIBLE);
         mBinding.widget.duration.setText(player().getDurationTime());
         mBinding.widget.position.setText(player().getPositionTime(time));
         mBinding.widget.action.setImageResource(time > 0 ? R.drawable.ic_widget_forward : R.drawable.ic_widget_rewind);
-        hideProgress();
     }
 
     @Override
     public void onSeekEnd(long time) {
+        hideCenter();
         if (seekTo(time)) hideCenter();
         mKeyDown.reset();
     }
@@ -1377,7 +1390,8 @@ public class VideoActivity extends PlaybackActivity implements VodPlaybackHost, 
     @Override
     public void onSpeedEnd() {
         PlaybackAction.hideSpeedHint(mBinding.widget.message);
-        player().setSpeed(SpeedSetting.getPlayback());
+        float resumeSpeed = (mHistory != null && mHistory.getSpeed() > 0) ? mHistory.getSpeed() : SpeedSetting.getPlayback();
+        player().setSpeed(resumeSpeed);
     }
 
     @Override

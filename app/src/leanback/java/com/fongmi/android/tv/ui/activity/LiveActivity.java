@@ -181,6 +181,8 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
         mBinding.control.action.line.setOnClickListener(view -> onLine());
         mBinding.control.action.scale.setOnClickListener(view -> onScale());
         mBinding.control.action.speed.setOnClickListener(view -> onSpeed());
+        mBinding.control.action.speed.setUpListener(() -> PlaybackAction.adjustSpeed(player(), mBinding.widget.message, true));
+        mBinding.control.action.speed.setDownListener(() -> PlaybackAction.adjustSpeed(player(), mBinding.widget.message, false));
         mBinding.control.action.config.setOnClickListener(view -> onConfig());
         mBinding.control.action.action.setOnClickListener(view -> onAction());
         mBinding.control.action.invert.setOnClickListener(view -> onInvert());
@@ -974,11 +976,11 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
     @Override
     public void onSeeking(long time) {
         if (!player().canSeek()) return;
+        hideProgress();
         mBinding.widget.center.setVisibility(View.VISIBLE);
         mBinding.widget.duration.setText(player().getDurationTime());
         mBinding.widget.position.setText(player().getPositionTime(time));
         mBinding.widget.action.setImageResource(time > 0 ? R.drawable.ic_widget_forward : R.drawable.ic_widget_rewind);
-        hideProgress();
     }
 
     @Override
@@ -995,14 +997,16 @@ public class LiveActivity extends PlaybackActivity implements GroupAdapter.OnCli
 
     @Override
     public void onKeyLeft(long time) {
+        hideCenter();
         if (!player().canSeek()) prevLine();
-        else App.post(() -> seek(time), 250);
+        else seek(time);
     }
 
     @Override
     public void onKeyRight(long time) {
+        hideCenter();
         if (!player().canSeek()) nextLine(true);
-        else App.post(() -> seek(time), 250);
+        else seek(time);
     }
 
     @Override

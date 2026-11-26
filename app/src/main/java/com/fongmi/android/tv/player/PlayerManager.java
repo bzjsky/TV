@@ -350,6 +350,12 @@ public class PlayerManager implements ParseCallback {
         return setSpeed(getSpeed() == 1 ? SpeedSetting.getLongPress() : 1);
     }
 
+    public float adjustSpeed(boolean up) {
+        float speed = up ? SpeedSetting.next(getSpeed()) : SpeedSetting.prev(getSpeed());
+        setSpeed(speed);
+        return speed;
+    }
+
     public boolean supportsSkipSilence() {
         return effects.supportsSkipSilence();
     }

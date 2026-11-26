@@ -24,6 +24,12 @@ public final class PlaybackAction {
         return speed;
     }
 
+    public static float adjustSpeed(PlayerManager player, TextView view, boolean up) {
+        float speed = player.adjustSpeed(up);
+        showSpeedHint(view, speed);
+        return speed;
+    }
+
     public static void startSpeedPress(PlayerManager player, TextView view) {
         float speed = player.setSpeed(SpeedSetting.getLongPress());
         showSpeedPress(view, speed);

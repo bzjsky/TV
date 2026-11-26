@@ -17,6 +17,16 @@ public class CustomKeyDownLive extends GestureDetector.SimpleOnGestureListener {
     private final StringBuilder text;
     private final Listener listener;
     private long holdTime;
+    private int seekDirection;
+    private final Runnable seekCommit = this::commitSeek;
+
+    private void commitSeek() {
+        long time = holdTime;
+        int dir = seekDirection;
+        reset();
+        if (dir < 0) listener.onKeyLeft(time);
+        else if (dir > 0) listener.onKeyRight(time);
+    }
 
     private final Runnable runnable = new Runnable() {
         @Override
@@ -50,17 +60,25 @@ public class CustomKeyDownLive extends GestureDetector.SimpleOnGestureListener {
 
     private void check(KeyEvent event) {
         if (KeyUtil.isActionDown(event) && KeyUtil.isLeftKey(event)) {
+            App.removeCallbacks(seekCommit);
             listener.onSeeking(subTime());
         } else if (KeyUtil.isActionDown(event) && KeyUtil.isRightKey(event)) {
+            App.removeCallbacks(seekCommit);
             listener.onSeeking(addTime());
         } else if (KeyUtil.isActionDown(event) && KeyUtil.isUpKey(event)) {
+            reset();
             listener.onKeyUp();
         } else if (KeyUtil.isActionDown(event) && KeyUtil.isDownKey(event)) {
+            reset();
             listener.onKeyDown();
         } else if (KeyUtil.isActionUp(event) && KeyUtil.isLeftKey(event)) {
-            listener.onKeyLeft(holdTime);
+            seekDirection = -1;
+            App.removeCallbacks(seekCommit);
+            App.post(seekCommit, 250);
         } else if (KeyUtil.isActionUp(event) && KeyUtil.isRightKey(event)) {
-            listener.onKeyRight(holdTime);
+            seekDirection = 1;
+            App.removeCallbacks(seekCommit);
+            App.post(seekCommit, 250);
         } else if (KeyUtil.isActionUp(event) && KeyUtil.isDigitKey(event)) {
             onKeyDown(event.getKeyCode());
         } else if (KeyUtil.isActionUp(event) && KeyUtil.isEnterKey(event)) {
@@ -68,6 +86,12 @@ public class CustomKeyDownLive extends GestureDetector.SimpleOnGestureListener {
         } else if (KeyUtil.isMenuKey(event) || event.isLongPress() && KeyUtil.isEnterKey(event)) {
             listener.onMenu();
         }
+    }
+
+    public void reset() {
+        App.removeCallbacks(seekCommit);
+        holdTime = 0;
+        seekDirection = 0;
     }
 
     private void onKeyDown(int keyCode) {

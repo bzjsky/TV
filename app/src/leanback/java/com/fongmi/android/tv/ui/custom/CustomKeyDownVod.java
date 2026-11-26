@@ -18,6 +18,13 @@ public class CustomKeyDownVod extends GestureDetector.SimpleOnGestureListener {
     private boolean changeSpeed;
     private boolean full;
     private long holdTime;
+    private final Runnable seekCommit = this::commitSeek;
+
+    private void commitSeek() {
+        long time = holdTime;
+        reset();
+        if (time != 0) listener.onSeekEnd(time);
+    }
 
     public static CustomKeyDownVod create(Activity activity) {
         return new CustomKeyDownVod(activity);
@@ -48,22 +55,30 @@ public class CustomKeyDownVod extends GestureDetector.SimpleOnGestureListener {
 
     private void check(KeyEvent event) {
         if (KeyUtil.isActionDown(event) && KeyUtil.isLeftKey(event)) {
+            App.removeCallbacks(seekCommit);
             listener.onSeeking(subTime());
         } else if (KeyUtil.isActionDown(event) && KeyUtil.isRightKey(event)) {
+            App.removeCallbacks(seekCommit);
             listener.onSeeking(addTime());
         } else if (KeyUtil.isActionUp(event) && (KeyUtil.isLeftKey(event) || KeyUtil.isRightKey(event))) {
-            App.post(() -> listener.onSeekEnd(holdTime), 250);
-        } else if (KeyUtil.isActionUp(event) && KeyUtil.isUpKey(event)) {
-            if (changeSpeed) listener.onSpeedEnd();
-            else listener.onKeyUp();
-            changeSpeed = false;
-        } else if (KeyUtil.isActionUp(event) && KeyUtil.isDownKey(event)) {
-            listener.onKeyDown();
-        } else if (KeyUtil.isActionUp(event) && KeyUtil.isEnterKey(event)) {
-            listener.onKeyCenter();
-        } else if (event.isLongPress() && KeyUtil.isUpKey(event)) {
-            listener.onSpeedUp();
-            changeSpeed = true;
+            App.removeCallbacks(seekCommit);
+            App.post(seekCommit, 250);
+        } else {
+            if (KeyUtil.isActionDown(event) && holdTime != 0) {
+                reset();
+            }
+            if (KeyUtil.isActionUp(event) && KeyUtil.isUpKey(event)) {
+                if (changeSpeed) listener.onSpeedEnd();
+                else listener.onKeyUp();
+                changeSpeed = false;
+            } else if (KeyUtil.isActionUp(event) && KeyUtil.isDownKey(event)) {
+                listener.onKeyDown();
+            } else if (KeyUtil.isActionUp(event) && KeyUtil.isEnterKey(event)) {
+                listener.onKeyCenter();
+            } else if (event.isLongPress() && KeyUtil.isUpKey(event)) {
+                listener.onSpeedUp();
+                changeSpeed = true;
+            }
         }
     }
 
@@ -88,6 +103,7 @@ public class CustomKeyDownVod extends GestureDetector.SimpleOnGestureListener {
     }
 
     public void reset() {
+        App.removeCallbacks(seekCommit);
         holdTime = 0;
     }
 
